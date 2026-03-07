@@ -1,3 +1,5 @@
+teams.json
 .env
 .venv/
 .idea/
+__pycache__/

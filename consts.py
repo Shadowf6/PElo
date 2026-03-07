@@ -6,14 +6,11 @@ dotenv.load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
 URL = "https://www.robotevents.com/api/v2"
+OLD = "https://www.robotevents.com/api"
 
-HEADERS = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Accept": "application/json"
-}
+HEADERS = {"Authorization": f"Bearer {API_KEY}", "Accept": "application/json"}
 
 TEAMS = {}
 
-pushback = 197
-year = 2026
-v5rc = 1
+SEASON = 197
+YEAR = 2026

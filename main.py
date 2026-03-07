@@ -1,6 +1,5 @@
 import requests
 import json
-import datetime
 import re
 import consts
 from consts import *
@@ -19,38 +18,44 @@ if __name__ == "__main__":
     if response.status_code == 200:
         while True:
             print("\nMenu:\n"
-                  "1. Leave\n"
+                  "1. Leave and Save\n"
                   "2. Search Team\n"
                   "3. Reset Elos\n"
-                  "4. Update Elos")
+                  "4. Update Elos (Timestamp)\n"
+                  "5. Update Elos (Specific Event)")
 
             option = int(input("Enter option: "))
 
             if option == 1:
+                sortTeams()
                 exit(0)
             elif option == 2:
                 num = input("Enter team number: ")
                 searchTeam(num)
             elif option == 3:
-                confirm = input("Enter 'Yes' to confirm. ")
+                confirm = input("Enter \"Yes\" to confirm. ")
                 if confirm == "Yes":
                     resetTeams()
             elif option == 4:
                 start = input("Enter start date (YYYY-MM-DD): ")
                 end = input("Enter end date (YYYY-MM-DD): ")
 
-                if (start and not bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", start))) or (end and not bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", end))):
+                if ((start and not bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", start))) or
+                        (end and not bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", end)))):
                     print("Invalid format.")
                     continue
 
                 if start and end:
                     updateEvents(start, end)
                 elif start and not end:
-                    updateEvents(start, f"{year}-12-31")
+                    updateEvents(start, f"{YEAR}-12-31")
                 elif end and not start:
-                    updateEvents(f"{year - 1}-1-1", end)
+                    updateEvents(f"{YEAR-1}-01-01", end)
                 else:
-                    updateEvents(f"{year - 1}-1-1", f"{year}-12-31")
+                    updateEvents(f"{YEAR-1}-01-01", f"{YEAR}-12-31")
+            elif option == 5:
+                code = input("Enter event code: ")
+                processEventByCode(code.strip())
 
             input("\nPress enter to continue.")
     else:
