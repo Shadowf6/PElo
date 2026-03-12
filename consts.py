@@ -31,7 +31,8 @@ MATCH = {
     3: ELIM_MULTIPLIER,
     4: ELIM_MULTIPLIER,
     5: ELIM_MULTIPLIER,
-    6: ELIM_MULTIPLIER
+    6: ELIM_MULTIPLIER,
+    7: 1
 }
 
 B = 40  # Base elo gain/loss

@@ -3,7 +3,6 @@ import json
 import consts
 from consts import *
 
-# 2 Requests
 def searchTeam(number: str) -> None:
     response = requests.get(f"{URL}/teams", headers=HEADERS,
                             params={"number": number, "program": 1, "registered": True})
@@ -35,7 +34,6 @@ def searchTeam(number: str) -> None:
         rank += 1
 
     print(f"\nTeam {number} {team['team_name']}")
-    print(f"ID: {team_id}")
     print(f"Grade: {team['grade']}")
     print(f"Region: {team['location']['region']}")
     print(f"Elo: {consts.TEAMS.get(number, 1000)} (#{p})")

@@ -61,3 +61,4 @@ if __name__ == "__main__":
     else:
         print("API is currently down.")
         exit(0)
+ 

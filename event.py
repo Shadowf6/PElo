@@ -7,7 +7,6 @@ from consts import *
 from team import *
 from match import *
 
-# 1 Request
 def updateEvents(start: str, end: str) -> None:
     print("\nGetting events....")
 
@@ -60,7 +59,6 @@ def updateEvents(start: str, end: str) -> None:
     print()
     updateTeams()
 
-# 1 Request
 def processEventByCode(event_code: str) -> None:
     response = requests.get(f"{URL}/events", headers=HEADERS, params={"sku": event_code})
     data = response.json()
@@ -72,10 +70,27 @@ def processEventByCode(event_code: str) -> None:
     processEventByID(data["data"][0]["id"])
     updateTeams()
 
-# 2 Requests
 def processEventByID(event_id: int) -> None:
-    response = requests.get(f"{URL}/events/{event_id}", headers=HEADERS)
-    data = response.json()
+    i = 0
+    data = {}
+
+    while True:
+        response = requests.get(f"{URL}/events/{event_id}", headers=HEADERS)
+        if response.status_code != 200:
+            time.sleep(30 + i)
+            i += 10
+            continue
+
+        try:
+            data = response.json()
+            i = 0
+            break
+        except json.decoder.JSONDecodeError:
+            time.sleep(30 + i)
+            i += 10
+
+    if not data.get("divisions"):
+        return
 
     divisions = []
     for div in data["divisions"]:
@@ -91,9 +106,23 @@ def processEventByID(event_id: int) -> None:
         page = 1
 
         while True:
-            response = requests.get(f"{URL}/events/{event_id}/divisions/{div}/matches", headers=HEADERS,
-                                    params={"page": page, "per_page": 250})
-            data = response.json()
+            data = {}
+
+            while True:
+                response = requests.get(f"{URL}/events/{event_id}/divisions/{div}/matches", headers=HEADERS,
+                                        params={"page": page, "per_page": 250})
+                if response.status_code != 200:
+                    time.sleep(30 + i)
+                    i += 10
+                    continue
+
+                try:
+                    data = response.json()
+                    i = 0
+                    break
+                except json.decoder.JSONDecodeError:
+                    time.sleep(30 + i)
+                    i += 10
 
             if not data.get("data"):
                 return
