@@ -1,5 +1,4 @@
-teams.json
-log.txt
+src/teams.json
 .env
 *.pyc
 .venv/

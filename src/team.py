@@ -21,7 +21,7 @@ def searchTeam(number: str) -> None:
     except ValueError:
         p = 99999
 
-    response = requests.get(f"{OLD}/seasons/{SEASON}/skills", headers=HEADERS)
+    response = requests.get(f"https://www.robotevents.com/api/seasons/{SEASON}/skills", headers=HEADERS)
     data = response.json()
 
     total, driver, prog, rank = 0, 0, 0, 1

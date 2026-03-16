@@ -7,7 +7,6 @@ dotenv.load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
 URL = "https://www.robotevents.com/api/v2"
-OLD = "https://www.robotevents.com/api"
 
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Accept": "application/json"}
 
@@ -35,6 +34,6 @@ MATCH = {
     7: 1
 }
 
-B = 40  # Base elo gain/loss
-T = 103  # Performance threshold
-D = 400 / math.log(1.5, 10)  # +400 elo difference = 1.5:1 odds of winning
+B = 40
+T = 103
+D = 400 / math.log(1.5, 10)

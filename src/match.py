@@ -15,9 +15,9 @@ def processMatch(teams: list[str], diff: int, event_type: int, match_type: int) 
     red_avg = elos[0] / red_total * elos[0] + elos[1] / red_total * elos[1]
     blue_avg = elos[2] / blue_total * elos[2] + elos[3] / blue_total * elos[3]
 
-    E = EVENT[event_type]  # event type
-    R = MATCH[match_type]  # match round
-    P = 1 + abs(diff) / T  # performance bonus
+    E = EVENT[event_type]
+    R = MATCH[match_type]
+    P = 1 + abs(diff) / T
 
     if diff > 0:
         change[0] = max(1, int(E * R * P * B * (1 - 1 / (1 + 10 ** ((blue_avg - elos[0]) / D)))))
