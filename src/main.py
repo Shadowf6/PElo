@@ -1,33 +1,34 @@
 import requests
 import json
 import re
-import consts
 from consts import *
 from team import *
 from event import *
 
-response = requests.get(URL, headers=HEADERS)
-
 if __name__ == "__main__":
+    response = requests.get(URL, headers=HEADERS)
+
     print("Starting...")
     print(f"Status Code: {response.status_code}")
 
-    with open("teams.json", "r") as f:
-        consts.TEAMS = json.load(f)
+    with open("../data/elos.json", "r") as f:
+        consts.ELOS = json.load(f)
 
     if response.status_code == 200:
         while True:
             print("\nMenu:\n"
-                  "1. Leave and Save\n"
+                  "1. Save and Leave\n"
                   "2. Search Team\n"
                   "3. Reset Elos\n"
-                  "4. Update Elos (Timestamp)\n"
-                  "5. Update Elos (Specific Event)")
+                  "4. Process Events (Timestamp)\n"
+                  "5. Process Event (by SKU)\n"
+                  "6. Create Team Rankings\n"
+                  "7. Simulate Match")
 
             option = int(input("Enter option: "))
 
             if option == 1:
-                sortTeams()
+                sortElos()
                 exit(0)
             elif option == 2:
                 num = input("Enter team number: ")
@@ -35,7 +36,9 @@ if __name__ == "__main__":
             elif option == 3:
                 confirm = input("Enter \"Yes\" to confirm. ")
                 if confirm == "Yes":
-                    resetTeams()
+                    resetElos()
+                else:
+                    print("Cancelled.")
             elif option == 4:
                 start = input("Enter start date (YYYY-MM-DD): ")
                 end = input("Enter end date (YYYY-MM-DD): ")
@@ -56,6 +59,16 @@ if __name__ == "__main__":
             elif option == 5:
                 code = input("Enter event code: ")
                 processEventByCode(code.strip())
+            elif option == 6:
+                createTeamRankings()
+            elif option == 7:
+                r1 = input("Red 1: ")
+                r2 = input("Red 2: ")
+                b1 = input("Blue 1: ")
+                b2 = input("Blue 2: ")
+                red_score = int(input("Red Score: "))
+                blue_score = int(input("Blue Score: "))
+                simulateMatch(r1, r2, b1, b2, red_score, blue_score)
 
             input("\nPress enter to continue.")
     else:

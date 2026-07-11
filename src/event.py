@@ -57,7 +57,10 @@ def updateEvents(start: str, end: str) -> None:
         sys.stdout.flush()
 
     print()
-    updateTeams()
+    updateElos()
+
+    with open("config.txt", "w") as f:
+        f.write(end)
 
 def processEventByCode(event_code: str) -> None:
     response = requests.get(f"{URL}/events", headers=HEADERS, params={"sku": event_code})
@@ -68,7 +71,7 @@ def processEventByCode(event_code: str) -> None:
         return
 
     processEventByID(data["data"][0]["id"])
-    updateTeams()
+    updateElos()
 
 def processEventByID(event_id: int) -> None:
     i = 0
@@ -138,7 +141,7 @@ def processEventByID(event_id: int) -> None:
 
                 processMatch([red["teams"][0]["team"]["name"], red["teams"][1]["team"]["name"],
                               blue["teams"][0]["team"]["name"], blue["teams"][1]["team"]["name"]],
-                             red["score"] - blue["score"], event_type, match["round"])
+                             red["score"], blue["score"], event_type, match["round"])
 
             if page >= data["meta"]["last_page"]:
                 break
