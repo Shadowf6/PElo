@@ -2,60 +2,75 @@ import consts
 from consts import *
 from team import *
 
-def calculateChanges(elos: list[int], red_score: int, blue_score: int, event_type: int, match_type: int) -> list[int]:
+
+def calculateChanges(elo: list[int], vol: list[float], red_score: int, blue_score: int, event_type: int, match_type: int) -> list[int]:
     change = [0, 0, 0, 0]
 
-    red_avg = (elos[0] ** 3 + elos[1] ** 3) / max(1, elos[0] ** 2 + elos[1] ** 2)
-    blue_avg = (elos[2] ** 3 + elos[3] ** 3) / max(1, elos[2] ** 2 + elos[3] ** 2)
+    red_avg = (elo[0] ** 3 + elo[1] ** 3) / max(1, elo[0] ** 2 + elo[1] ** 2)
+    blue_avg = (elo[2] ** 3 + elo[3] ** 3) / max(1, elo[2] ** 2 + elo[3] ** 2)
 
-    E = EVENT[event_type]
-    R = MATCH[match_type]
-    P = 1 + abs(red_score - blue_score) / T
+    event_mult = EVENT_TYPES[event_type]
+    round_mult = MATCH_TYPES[match_type]
+    performance_mult = 1 + abs(red_score - blue_score) / (MAX_SCORE / 2)
+
+    win = event_mult * round_mult * performance_mult * BASE
+    loss = (2 - event_mult) * (2 - round_mult) * performance_mult * BASE
+    draw = performance_mult * BASE
 
     if red_score > blue_score:
-        change[0] = max(1, int(E * R * P * B * (1 - 1 / (1 + 10 ** ((blue_avg - elos[0]) / D)))))
-        change[1] = max(1, int(E * R * P * B * (1 - 1 / (1 + 10 ** ((blue_avg - elos[1]) / D)))))
-        change[2] = -max(1, int((2 - E) * (2 - R) * P * B * (1 / (1 + 10 ** ((red_avg - elos[2]) / D)))))
-        change[3] = -max(1, int((2 - E) * (2 - R) * P * B * (1 / (1 + 10 ** ((red_avg - elos[3]) / D)))))
+        change[0] = max(1, int(win * vol[0] * (1 - 1 / (1 + 10 ** ((blue_avg - elo[0]) / ODDS)))))
+        change[1] = max(1, int(win * vol[1] * (1 - 1 / (1 + 10 ** ((blue_avg - elo[1]) / ODDS)))))
+        change[2] = -max(1, int(loss * vol[2] * (1 / (1 + 10 ** ((red_avg - elo[2]) / ODDS)))))
+        change[3] = -max(1, int(loss * vol[3] * (1 / (1 + 10 ** ((red_avg - elo[3]) / ODDS)))))
     elif red_score < blue_score:
-        change[0] = -max(1, int((2 - E) * (2 - R) * P * B * (1 / (1 + 10 ** ((blue_avg - elos[0]) / D)))))
-        change[1] = -max(1, int((2 - E) * (2 - R) * P * B * (1 / (1 + 10 ** ((blue_avg - elos[1]) / D)))))
-        change[2] = max(1, int(E * R * P * B * (1 - 1 / (1 + 10 ** ((red_avg - elos[2]) / D)))))
-        change[3] = max(1, int(E * R * P * B * (1 - 1 / (1 + 10 ** ((red_avg - elos[3]) / D)))))
+        change[0] = -max(1, int(loss * vol[0] * (1 / (1 + 10 ** ((blue_avg - elo[0]) / ODDS)))))
+        change[1] = -max(1, int(loss * vol[1] * (1 / (1 + 10 ** ((blue_avg - elo[1]) / ODDS)))))
+        change[2] = max(1, int(win * vol[2] * (1 - 1 / (1 + 10 ** ((red_avg - elo[2]) / ODDS)))))
+        change[3] = max(1, int(win * vol[3] * (1 - 1 / (1 + 10 ** ((red_avg - elo[3]) / ODDS)))))
     else:
-        change[0] = round(P * B * (0.5 - 1 / (1 + 10 ** ((blue_avg - elos[0]) / D))))
-        change[1] = round(P * B * (0.5 - 1 / (1 + 10 ** ((blue_avg - elos[1]) / D))))
-        change[2] = round(P * B * (0.5 - 1 / (1 + 10 ** ((blue_avg - elos[2]) / D))))
-        change[3] = round(P * B * (0.5 - 1 / (1 + 10 ** ((blue_avg - elos[3]) / D))))
+        change[0] = int(draw * vol[0] * (0.5 - 1 / (1 + 10 ** ((blue_avg - elo[0]) / ODDS))))
+        change[1] = int(draw * vol[1] * (0.5 - 1 / (1 + 10 ** ((blue_avg - elo[1]) / ODDS))))
+        change[2] = int(draw * vol[2] * (0.5 - 1 / (1 + 10 ** ((red_avg - elo[2]) / ODDS))))
+        change[3] = int(draw * vol[3] * (0.5 - 1 / (1 + 10 ** ((red_avg - elo[3]) / ODDS))))
 
     return change
 
-def processMatch(teams: list[str], red_score: int, blue_score: int, event_type: int, match_type: int) -> None:
-    if "Missing" in teams:
-        return
 
-    elos = [consts.ELOS.get(t, 1000) for t in teams]
+def processMatch(teams: list[str], red_score: int, blue_score: int, event_type: int, match_type: int):
+    for t in teams:
+        if t not in consts.active["teams"]:
+            consts.active["teams"][t] = 0
+            consts.inactive[t] = 2.0
+        else:
+            consts.active["teams"][t] = 0
 
-    change = calculateChanges(elos, red_score, blue_score, event_type, match_type)
+    elo = [consts.elos.get(t, DEFAULT_ELO) for t in teams]
+    vol = [consts.inactive.get(t, 1.0) for t in teams]
+    change = calculateChanges(elo, vol, red_score, blue_score, event_type, match_type)
+
+    for t in teams:
+        if t in consts.inactive:
+            consts.inactive[t] = max(1.0, consts.inactive[t] - 0.1)
 
     for i in range(4):
-        consts.ELOS[teams[i]] = max(0, consts.ELOS.get(teams[i], 1000) + change[i])
+        consts.elos[teams[i]] = max(0, elo[i] + change[i])
 
-def simulateMatch(r1: str, r2: str, b1: str, b2: str, red_score: int, blue_score: int) -> None:
+
+def simulateMatch(r1: str, r2: str, b1: str, b2: str, red_score: int, blue_score: int):
     teams = [r1, r2, b1, b2]
-    elos = [consts.ELOS.get(t, 1000) for t in teams]
-    change = calculateChanges(elos, red_score, blue_score, 1, 2)
+    elo = [consts.elos.get(t, DEFAULT_ELO) for t in teams]
+    change = calculateChanges(elo, [1.0, 1.0, 1.0, 1.0], red_score, blue_score, 1, 2)
 
     print(f"\nMatch:\n{r1} + {r2} vs. {b1} + {b2}")
     print(f"Score: {red_score} - {blue_score}\n")
 
     for i in range(4):
-        print(f"{teams[i]}: {"+" if change[i] >= 0 else "-"}{abs(change[i])} ({elos[i]} -> {max(0, elos[i] + change[i])})")
+        print(f"{teams[i]}: {"+" if change[i] >= 0 else "-"}{abs(change[i])} ({elo[i]} -> {max(0, elo[i] + change[i])})")
 
-    red_avg = (elos[0] ** 3 + elos[1] ** 3) / max(1, elos[0] ** 2 + elos[1] ** 2)
-    blue_avg = (elos[2] ** 3 + elos[3] ** 3) / max(1, elos[2] ** 2 + elos[3] ** 2)
+    red_avg = (elo[0] ** 3 + elo[1] ** 3) / max(1, elo[0] ** 2 + elo[1] ** 2)
+    blue_avg = (elo[2] ** 3 + elo[3] ** 3) / max(1, elo[2] ** 2 + elo[3] ** 2)
 
-    red_prob = 1 / (1 + 10 ** ((blue_avg - red_avg) / D))
+    red_prob = 1 / (1 + 10 ** ((blue_avg - red_avg) / ODDS))
     blue_prob = 1 - red_prob
 
     print(f"\nRed win probability: {round(100 * red_prob, 2)}%")

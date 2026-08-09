@@ -9,5 +9,5 @@ Teams start at 1000 elo, and gain/lose elo per win/loss/tie. Multipliers affecti
 
 The basic algorithm is inspired by the chess elo system, which a logistic probability model on predicted outcomes between two players. The algorithm had to be modified for a 2-on-2 format, which uses a weighted average (which favors higher elos) as the "second" elo and the first elo being calculated for each individual team in the alliance.
 
-### ELO IS NOT AN OBJECTIVE MEASURE OF SKILL, IT IS ONLY A METRIC!
+#### ELO IS NOT AN OBJECTIVE MEASURE OF SKILL, IT IS ONLY A METRIC!
 This also reflects in the fact that a team that goes to more competitions will on average improve more.

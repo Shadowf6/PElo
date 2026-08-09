@@ -1,13 +1,22 @@
 import requests
 import json
 import sys
+import re
 import time
+from datetime import datetime
+
 import consts
 from consts import *
 from team import *
 from match import *
 
-def updateEvents(start: str, end: str) -> None:
+
+def updateEvents(start: str, end: str):
+    if ((start and not bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", start)))
+            or (end and not bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", end)))):
+        print("Invalid format.")
+        return
+
     print("\nGetting events....")
 
     events = []
@@ -60,9 +69,11 @@ def updateEvents(start: str, end: str) -> None:
     updateElos()
 
     with open("config.txt", "w") as f:
+        consts.last_updated = end
         f.write(end)
 
-def processEventByCode(event_code: str) -> None:
+
+def processEventByCode(event_code: str):
     response = requests.get(f"{URL}/events", headers=HEADERS, params={"sku": event_code})
     data = response.json()
 
@@ -73,7 +84,8 @@ def processEventByCode(event_code: str) -> None:
     processEventByID(data["data"][0]["id"])
     updateElos()
 
-def processEventByID(event_id: int) -> None:
+
+def processEventByID(event_id: int):
     i = 0
     data = {}
 
@@ -105,10 +117,32 @@ def processEventByID(event_id: int) -> None:
     elif data["event_type"] == "league":
         event_type = 3
 
+    start_date = data["start"][:10]
+    end_date = data["end"][:10]
+
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+
+    last = datetime.strptime(consts.active["last"], "%Y-%m-%d")
+    since = (start - last).days
+
+    remove = []
+
+    for t in consts.active["teams"]:
+        consts.active["teams"][t] += since
+        if consts.active["teams"][t] >= INACTIVITY:
+            remove.append(t)
+
+    for t in remove:
+        del consts.active["teams"][t]
+
+    consts.active["last"] = start_date
+
     for div in divisions:
         page = 1
 
         while True:
+            i = 0
             data = {}
 
             while True:
@@ -128,20 +162,24 @@ def processEventByID(event_id: int) -> None:
                     i += 10
 
             if not data.get("data"):
-                return
+                break
 
             for match in data["data"]:
                 red = match["alliances"][1]
                 blue = match["alliances"][0]
 
-                if (3 <= match["round"] < 6 and (red["score"] == 0 or blue["score"] == 0)
+                if ((3 <= match["round"] <= 7 and (red["score"] == 0 or blue["score"] == 0)
                         or match["round"] == 1
-                        or (len(red["teams"]) != 2 or len(blue["teams"]) != 2)):
+                        or (len(red["teams"]) != 2 or len(blue["teams"]) != 2))):
                     continue
 
-                processMatch([red["teams"][0]["team"]["name"], red["teams"][1]["team"]["name"],
-                              blue["teams"][0]["team"]["name"], blue["teams"][1]["team"]["name"]],
-                             red["score"], blue["score"], event_type, match["round"])
+                teams = [red["teams"][0]["team"]["name"], red["teams"][1]["team"]["name"],
+                         blue["teams"][0]["team"]["name"], blue["teams"][1]["team"]["name"]]
+
+                if "Missing" in teams:
+                    continue
+
+                processMatch(teams, red["score"], blue["score"], event_type, match["round"])
 
             if page >= data["meta"]["last_page"]:
                 break

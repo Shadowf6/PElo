@@ -1,4 +1,5 @@
 data/
+src/config.txt
 .env
 *.pyc
 .venv/

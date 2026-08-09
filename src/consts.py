@@ -10,22 +10,26 @@ URL = "https://events.vex.com/api/v2"
 
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Accept": "application/json"}
 
-ELOS = {}
+elos = {}
+DEFAULT_ELO = 1000
 
-SEASON = 204
+active = {}
+inactive = {}
+INACTIVITY = 60
+
+SEASON = 197
 YEAR = 2027
 
 WQ_MULTIPLIER = 1.2
 LEAGUE_MULTIPLIER = 0.6
-EVENT = {
+EVENT_TYPES = {
     1: 1,
     2: WQ_MULTIPLIER,
     3: LEAGUE_MULTIPLIER
 }
 
 ELIM_MULTIPLIER = 0.8
-MATCH = {
-    1: 0,
+MATCH_TYPES = {
     2: 1,
     3: ELIM_MULTIPLIER,
     4: ELIM_MULTIPLIER,
@@ -34,6 +38,6 @@ MATCH = {
     7: ELIM_MULTIPLIER
 }
 
-B = 30
-T = 214
-D = 200 / math.log10(2)
+BASE = 30
+MAX_SCORE = 588
+ODDS = 400 / math.log10(2)
