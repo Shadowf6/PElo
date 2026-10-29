@@ -21,6 +21,9 @@ if __name__ == "__main__":
     with open("../data/active.json", "r") as f:
         consts.active = json.load(f)
 
+    with open("../data/events.json", "r") as f:
+        consts.events = json.load(f)
+
     while True:
         print("\nMenu:\n"
               "1. Save and Leave\n"

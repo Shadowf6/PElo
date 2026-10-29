@@ -5,23 +5,26 @@ import datetime
 import consts
 from consts import *
 
-WINRATE = 0.95
-AWPRATE = 0.55
-MEDIAN = 70
-AWARDRATE = 4
+WINRATE = 0.9
+AWPRATE = 0.15
+AUTONRATE = 0.8
+MEDIAN = 140
+AWARDRATE = 3
+AUTONWIN = 12
 
 AWARDS = {
-    "Excellence Award": 10,
-    "Design Award": 7,
-    "Amaze Award": 5,
-    "Innovate Award": 4,
-    "Think Award": 4,
-    "Build Award": 3,
-    "Create Award": 3,
-    "Judges Award": 3,
-    "Inspire Award": 1,
-    "Sportsmanship Award": 1,
-    "Energy Award": 1,
+    "Excellence": 10,
+    "Design": 7,
+    "Amaze": 5,
+    "Innovate": 4,
+    "Think": 4,
+    "Build": 3,
+    "Create": 3,
+    "Judges": 3,
+    "Inspire": 1,
+    "Sportsmanship": 1,
+    "Energy": 1,
+    "Champion": 1
 }
 
 
@@ -59,16 +62,19 @@ def evaluateTeam(number: str):
     rank = 0
     total = 1
 
-    if team["grade"] == "High School":
-        response = requests.get(f"https://events.vex.com/api/seasons/{SEASON}/skills/?search=&grade_level=High+School", headers=HEADERS)
-    else:
-        response = requests.get(f"https://events.vex.com/api/seasons/{SEASON}/skills/?search=&grade_level=Middle+School", headers=HEADERS)
+    # Grade can be wrong for new teams, so check high school first, then middle school
+    for level in ("High+School", "Middle+School"):
+        response = requests.get(f"https://events.vex.com/api/seasons/{SEASON}/skills/?search=&grade_level={level}", headers=HEADERS)
 
-    data = response.json()
-    for score in data:
-        if score["team"]["id"] == team_id:
-            rank = total
-        total += 1
+        rank = 0
+        total = 1
+        for score in response.json():
+            if score["team"]["id"] == team_id:
+                rank = total
+            total += 1
+
+        if rank != 0:
+            break
 
     print(f"\nSkills Rank: #{rank}")
     skills = round(100 * (total - rank + 1) / total) if rank != 0 else 0
@@ -121,7 +127,9 @@ def evaluateTeam(number: str):
     print(f"Median Score: {median_score}")
     median_score = round(min(100.0, 100 * median_score / MEDIAN))
 
+
     awp = 0
+    ap = 0.0
 
     response = requests.get(f"{URL}/teams/{team_id}/rankings", headers=HEADERS,
                             params={"season": SEASON})
@@ -133,12 +141,18 @@ def evaluateTeam(number: str):
 
     for ranking in data["data"]:
         awp += ranking["wp"] - 2 * ranking["wins"] - ranking["ties"]
+        ap += ranking["ap"] / AUTONWIN
 
+    awp = min(total_quals, awp)
     print(f"AWP: {awp} over {total_quals} quals ({round(100 * awp / total_quals, 1)}%)")
+    print(f"Auton Wins: {ap} over {total_quals} quals ({round(100 * ap / total_quals, 1)}%)")
     awp = round(min(100.0, 100 * awp / total_quals / AWPRATE))
+    ap = round(min(100.0, 100 * ap / total_quals / AUTONRATE))
+    auton = round(0.5 * ap + 0.5 * awp)
 
 
     awards = 0
+    num = 0
 
     response = requests.get(f"{URL}/teams/{team_id}/awards", headers=HEADERS,
                             params={"season": SEASON})
@@ -146,6 +160,7 @@ def evaluateTeam(number: str):
 
     if data.get("meta").get("total") > 0:
         for award in data["data"]:
+            num += 1
             awards += evaluateAward(award["title"], award["qualifications"])
 
     response = requests.get(f"{URL}/teams/{team_id}/events", headers=HEADERS,
@@ -154,6 +169,7 @@ def evaluateTeam(number: str):
 
     comps = data["meta"]["total"]
 
+    print(f"Awards Won: {num}")
     print(f"Judged Awards Valuation: {awards} over {comps} competition{"s" if comps > 1 else ""}")
     awards = min(100, round(100 * awards / (comps * AWARDRATE)))
 
@@ -161,7 +177,7 @@ def evaluateTeam(number: str):
     print(f"\nSkills: {skills}")
     print(f"Matches: {winrate}")
     print(f"Driving: {median_score}")
-    print(f"Auton: {awp}")
+    print(f"Auton: {auton}")
     print(f"Judging: {awards}")
-    overall = round(0.4 * skills + 0.2 * winrate + 0.2 * median_score + 0.1 * awp + 0.1 * awards)
+    overall = round(0.4 * skills + 0.2 * winrate + 0.2 * median_score + 0.1 * auton + 0.1 * awards)
     print(f"\nOverall: {overall}")

@@ -20,7 +20,7 @@ def createTeamRankings():
 
             if response.status_code != 200:
                 time.sleep(30 + i)
-                i += 10
+                i += 5
                 continue
 
             try:
@@ -29,7 +29,7 @@ def createTeamRankings():
                 break
             except json.decoder.JSONDecodeError:
                 time.sleep(30 + i)
-                i += 10
+                i += 5
 
         if not data.get("data"):
             break
@@ -103,6 +103,10 @@ def resetElos():
         json.dump({"last": "2026-01-01", "teams": {}}, f)
         consts.active = {"last": "2026-01-01", "teams": {}}
 
+    with open("../data/events.json", "w") as f:
+        json.dump([], f)
+        consts.events = []
+
     print("Elos have been reset.")
 
 
@@ -112,6 +116,9 @@ def updateElos():
 
     with open("../data/active.json", "w") as f:
         json.dump(consts.active, f, indent=4)
+
+    with open("../data/events.json", "w") as f:
+        json.dump(consts.events, f, indent=4)
 
     print("Elos have been updated.")
 

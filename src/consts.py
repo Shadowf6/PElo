@@ -13,11 +13,13 @@ HEADERS = {"Authorization": f"Bearer {API_KEY}", "Accept": "application/json"}
 elos = {}
 DEFAULT_ELO = 1000
 
+events = []
+
 active = {}
 inactive = {}
-INACTIVITY = 60
+INACTIVITY = 45
 
-SEASON = 197
+SEASON = 204
 YEAR = 2027
 
 WQ_MULTIPLIER = 1.2
@@ -38,6 +40,6 @@ MATCH_TYPES = {
     7: ELIM_MULTIPLIER
 }
 
-BASE = 30
-MAX_SCORE = 588
-ODDS = 400 / math.log10(2)
+BASE = 40
+MAX_SCORE = 518
+ODDS = 400 / math.log10(1.5)

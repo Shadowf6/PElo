@@ -1,7 +1,8 @@
-data/
-src/config.txt
 .env
+*.txt
 *.pyc
+__pycache__/
 .venv/
 .idea/
-__pycache__/
+data/
+src/cache/

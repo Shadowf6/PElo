@@ -36,24 +36,46 @@ def calculateChanges(elo: list[int], vol: list[float], red_score: int, blue_scor
     return change
 
 
-def processMatch(teams: list[str], red_score: int, blue_score: int, event_type: int, match_type: int):
-    for t in teams:
-        if t not in consts.active["teams"]:
-            consts.active["teams"][t] = 0
-            consts.inactive[t] = 2.0
-        else:
-            consts.active["teams"][t] = 0
+def processMatch(teams: list[str], red_score: int, blue_score: int, event_type: int, match_type: int, match: str, evaluate: bool) -> dict:
+    if evaluate:
+        for t in teams:
+            if t not in consts.active["teams"]:
+                consts.active["teams"][t] = 0
+                consts.inactive[t] = 2.0
+            else:
+                consts.active["teams"][t] = 0
 
-    elo = [consts.elos.get(t, DEFAULT_ELO) for t in teams]
-    vol = [consts.inactive.get(t, 1.0) for t in teams]
-    change = calculateChanges(elo, vol, red_score, blue_score, event_type, match_type)
+        elo = [consts.elos.get(t, DEFAULT_ELO) for t in teams]
+        vol = [consts.inactive.get(t, 1.0) for t in teams]
+        change = calculateChanges(elo, vol, red_score, blue_score, event_type, match_type)
 
-    for t in teams:
-        if t in consts.inactive:
-            consts.inactive[t] = max(1.0, consts.inactive[t] - 0.1)
+        for t in teams:
+            if t in consts.inactive:
+                consts.inactive[t] = max(1.0, consts.inactive[t] - 0.17)
 
-    for i in range(4):
-        consts.elos[teams[i]] = max(0, elo[i] + change[i])
+        for i in range(4):
+            consts.elos[teams[i]] = max(0, elo[i] + change[i])
+
+        return {
+            "Match": match,
+            "Matchup": f"{teams[0]} + {teams[1]} vs. {teams[2]} + {teams[3]}",
+            "Score": f"{red_score}-{blue_score}",
+            "Changes": [f"{teams[i]}{f" ({round(vol[i], 1)}x)" if vol[i] > 1 else ""}: {"+" if change[i] >= 0 else "-"}{abs(change[i])} ({elo[i]} -> {max(0, elo[i] + change[i])})" for i in range(4)]
+        }
+    else:
+        side = ""
+        if red_score == 0 and blue_score != 0:
+            side = "Red"
+        elif red_score != 0 and blue_score == 0:
+            side = "Blue"
+        elif red_score == 0 and blue_score == 0:
+            side = "Double"
+
+        return {
+            "Match": match,
+            "Matchup": f"{teams[0]} + {teams[1]} vs. {teams[2]} + {teams[3]}",
+            "Score": f"{side} DQ"
+        }
 
 
 def simulateMatch(r1: str, r2: str, b1: str, b2: str, red_score: int, blue_score: int):
